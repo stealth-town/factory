@@ -1,0 +1,7 @@
+{
+  "name": "launch-solana",
+  "packageManager": "yarn@4.10.3",
+  "workspaces": [
+    "packages/*"
+  ]
+}
