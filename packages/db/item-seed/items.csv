@@ -1,0 +1,44 @@
+Item Type,Component Name,Power Output (MW),Reactor Stability/core health,Cycle Rate (Hz),Surge Efficiency (%),Surge Yield,Thermal Shielding (%),Notes
+Interface,Rusted Control Node,,25,,,,,Outdated but reliable analog interface.
+Interface,Overclock Interface Chip,,,,5%,,1,"Increases reaction output, unstable at high loads."
+Interface,Guardian Relay Hub,,20,,3%,,,Balanced regulator node for mid-tier control.
+Interface,Neural Sync Array,,10,,2%,,2,Links reactor cycles to operator systems.
+Interface,Helios Processor,,,,6%,,3,Experimental solar-core control board.
+Interface,Phase-Link Uplink,,15,,,,4,Protects control feedback from overload.
+Interface,Titan Command Node,,30,,1%,,,Heavy industrial-grade control system.
+Interface,Hollow Signal Core,,5,,4%,,4,Adaptive control processor that risks instability for power.
+Extraction Tool,Arc Induction Coil,12,,,,,,Basic starter-grade power coil.
+Extraction Tool,Thermal Bore Unit,10,,0.05,2%,,,Compact extractor for steady cycles.
+Extraction Tool,Plasma Drill Head,16,,0.03,,,,Deep-mining plasma unit for dense energy nodes.
+Extraction Tool,Ignition Extractor Arm,8,,0.1,5%,,,Fast and volatile extraction rig.
+Extraction Tool,Flux Grinder,11,,0.07,1%,,,High-risk rotating extractor.
+Extraction Tool,Spectral Conduit,13,,0.06,4%,,,Stable multi-phase output system.
+Extraction Tool,Entropy Lance Array,14,,,6%,,,Dangerous overvoltage extractor.
+Module,Copper Sync Relay,5,,0.05,2%,,,Basic regulation module.
+Module,Dual Coil Amplifier,7,,0.07,,,,Boosts rhythm across both extraction arms.
+Module,Toxic Surge Module,8,,,5%,,,Forces unstable plasma loops for higher yield.
+Module,Noctis Regulator,10,,0.06,3%,,,Balances cycle intensity for advanced cores.
+Module,Specter Node Array,12,,,6%,,,Peak surge node for burst builds.
+Module,Subroutine Injector,6,,0.08,1%,,,Optimizes feedback loops for speed builds.
+Module,Quantum Feedback Core,9,,0.04,4%,,,Rare device; produces chain reactions in surges.
+Platform,Ground Stabilizer Pads,,5,,,,3,Standard anti-shock foundation.
+Platform,Kinetic Lift Platform,,,0.09,,,,Light-grade oscillation support frame.
+Platform,Treadline Mount,,,0.04,,,2,Improves base rhythm during operation.
+Platform,Phantom Pedestal,,,0.06,,,5,High-precision balance stabilizer.
+Platform,Ignis Anchor Base,,5,0.08,,,4,"Heat-reactive baseplate, reroutes pressure."
+Platform,Titan Ground Frame,,15,,,,,Industrial reactor anchor platform.
+Platform,Phase-Lock Base,,,0.03,,,8,Advanced anti-vibration pedestal.
+Power Module,Cracked Capacitor,,,,4%,,,Simple voltage storage node.
+Power Module,Ember Core Cell,5,,,2%,,,Converts residual heat into usable energy.
+Power Module,Hemoflux Regulator,8,,,2%,,1,Circulates superheated plasma safely.
+Power Module,Phase Prism Core,6,,0.03,5%,,,Splits energy flow across systems for speed builds.
+Power Module,Chrono Sync Relay,10,,0.05,,,2,Stabilizes timing mismatches in energy bursts.
+Power Module,Overdrive Beacon,3,,0.1,1%,,,Pushes cycle acceleration at high risk.
+Power Module,Entropy Token,2,,,,,3,Uses chaotic energy for self-stabilization.
+Cooling System,Basic Fan Array,,20,,,,2,Simple air-cooled system.
+Cooling System,Alloy Coolant Pipes,,45,,,,,Standard fluid cooling circuit.
+Cooling System,Carbon Fiber Shell,,30,,,,3,Durable containment casing.
+Cooling System,Cryo Flow Harness,,50,,1%,,,Circulates coolant through high-stress zones.
+Cooling System,Cryo-Thermal Loop,,60,,,,2,Full-loop cooling for long cycle operations.
+Cooling System,Entropy Dissipator,,40,,,,,Converts instability into usable power.
+Cooling System,Phase Cooling Grid,,25,,,,5,Advanced nano coolant for high-tier cores.

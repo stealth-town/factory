@@ -15,3 +15,20 @@ node_modules
 
 #!.yarn/cache
 .pnp.*
+
+# Node modules
+node_modules
+
+# dists
+dist
+build
+target
+
+# editor options
+.vscode
+
+# Mac OS files
+.DS_Store
+
+# Env vars
+.env
