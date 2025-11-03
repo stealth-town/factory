@@ -36,7 +36,7 @@
 --
 CREATE TABLE users (
 
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, -- reference Supabase auth
     
     wallet_address TEXT NOT NULL UNIQUE, -- wallet is another type of id, but we need regular ID
     wallet_chain TEXT DEFAULT NULL, -- chain of the wallet - keep empty for now
@@ -143,18 +143,30 @@ CREATE INDEX IF NOT EXISTS idx_factory_user_id ON factory (user_id);
 -- it also creates the associated user_balances table, factory and generator tables
 -- it takes in the wallet address as the only input parameter
 --
-CREATE OR REPLACE FUNCTION create_user(_wallet TEXT)
+CREATE OR REPLACE FUNCTION create_user(_auth_user_id UUID, _wallet TEXT)
 RETURNS UUID AS $$
-DECLARE
-    _user_id UUID;
 BEGIN
-    INSERT INTO users (wallet_address) VALUES (_wallet)
-    RETURNING id INTO _user_id;
-
-    INSERT INTO factory (user_id) VALUES (_user_id);
-    INSERT INTO generator (user_id) VALUES (_user_id);
-
-    RETURN _user_id;
+    INSERT INTO users (id, wallet_address) VALUES (_auth_user_id, _wallet);
+    INSERT INTO factory (user_id) VALUES (_auth_user_id);
+    INSERT INTO generator (user_id) VALUES (_auth_user_id);
+    RETURN _auth_user_id;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
+-- ####################
+-- # RLS & POLICIES #
+-- ####################
+-- Enable RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_balances_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE generator ENABLE ROW LEVEL SECURITY;
+ALTER TABLE factory ENABLE ROW LEVEL SECURITY;
+
+-- Users can read/update their own data
+CREATE POLICY "Users own data" ON users FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Users own balances" ON user_balances_logs FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users own generator" ON generator FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users own factory" ON factory FOR ALL USING (auth.uid() = user_id);
 
