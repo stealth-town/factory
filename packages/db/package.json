@@ -9,7 +9,8 @@
     "restart": "supabase reset",
     "reset": "supabase reset",
     "status": "supabase status",
-    "types-gen-local": "supabase gen types typescript --local > ./src/database.types.ts"
+    "types-gen-local": "supabase gen types typescript --local > ./src/database.types.ts",
+    "types-gen-copy": "cp ./src/database.types.ts ../shared/src/lib/database.types.ts"
   },
   "dependencies": {
     "supabase": "^2.54.11"
