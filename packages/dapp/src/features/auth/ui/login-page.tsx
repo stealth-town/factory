@@ -1,11 +1,20 @@
+import { Navigate, useNavigate } from 'react-router'
 import { useAuth } from '../data-access/use-auth'
+import { useAuthStatus } from '../data-access/use-auth-status'
 import { useWalletUi } from '@wallet-ui/react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export function LoginPage() {
-  const { connect, connected, publicKey } = useWalletUi()
+  const navigate = useNavigate()
+  const { connect, connected, account } = useWalletUi()
   const { login } = useAuth()
+  const { isAuthenticated, isLoading } = useAuthStatus()
+
+  // Redirect to home if already authenticated
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
 
   const handleConnect = async () => {
     try {
@@ -20,6 +29,8 @@ export function LoginPage() {
     try {
       await login.mutateAsync()
       toast.success('Successfully signed in!')
+      // Redirect to home after successful login
+      navigate('/', { replace: true })
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to sign in')
       console.error(error)
@@ -49,7 +60,7 @@ export function LoginPage() {
             <div className="space-y-4">
               <div className="rounded-lg border bg-muted/50 p-4">
                 <p className="text-sm text-muted-foreground">Connected Wallet</p>
-                <p className="font-mono text-sm break-all">{publicKey}</p>
+                <p className="font-mono text-sm break-all">{account?.address}</p>
               </div>
               
               <Button
