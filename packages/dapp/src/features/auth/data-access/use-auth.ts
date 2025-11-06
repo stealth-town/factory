@@ -23,17 +23,19 @@ export interface LoginResponse {
  * Hook for wallet-based authentication
  */
 export function useAuth() {
-  const { publicKey, signMessage, connected } = useWalletUi()
+  const { account, signMessage, connected } = useWalletUi()
 
   const login = useMutation({
     mutationFn: async (): Promise<AuthUser> => {
-      if (!publicKey || !signMessage || !connected) {
+      if (!account || !signMessage || !connected) {
         throw new Error('Wallet not connected')
       }
 
+      const walletAddress = account.address
+
       // Sign authentication message
       const { signature, message } = await signAuthMessage(
-        new PublicKey(publicKey),
+        new PublicKey(walletAddress),
         signMessage
       )
 
@@ -44,7 +46,7 @@ export function useAuth() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          walletAddress: publicKey,
+          walletAddress,
           signature,
           message,
         }),
@@ -73,7 +75,7 @@ export function useAuth() {
 
   return {
     login,
-    isAuthenticated: connected && !!publicKey,
+    isAuthenticated: connected && !!account,
   }
 }
 

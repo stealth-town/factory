@@ -1,5 +1,6 @@
 import { useRoutes } from 'react-router'
 import { lazy } from 'react'
+import { ProtectedRoute } from '@/features/auth/components/protected-route'
 
 const AccountDetailFeature = lazy(() => import('@/features/account/account-feature-detail.tsx'))
 const AccountIndexFeature = lazy(() => import('@/features/account/account-feature-index.tsx'))
@@ -9,21 +10,46 @@ const LoginPage = lazy(() => import('@/features/auth/ui/login-page'))
 
 export function AppRoutes() {
   return useRoutes([
-    { index: true, element: <DashboardFeature /> },
     {
       path: 'login',
       element: <LoginPage />,
     },
     {
+      index: true,
+      element: (
+        <ProtectedRoute>
+          <DashboardFeature />
+        </ProtectedRoute>
+      ),
+    },
+    {
       path: 'account',
       children: [
-        { index: true, element: <AccountIndexFeature /> },
-        { path: ':address', element: <AccountDetailFeature /> },
+        {
+          index: true,
+          element: (
+            <ProtectedRoute>
+              <AccountIndexFeature />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: ':address',
+          element: (
+            <ProtectedRoute>
+              <AccountDetailFeature />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
     {
       path: 'dapp',
-      element: <DappFeature />,
+      element: (
+        <ProtectedRoute>
+          <DappFeature />
+        </ProtectedRoute>
+      ),
     },
   ])
 }
