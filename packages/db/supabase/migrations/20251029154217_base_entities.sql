@@ -137,26 +137,60 @@ CREATE INDEX IF NOT EXISTS idx_factory_user_id ON factory (user_id);
 -- ####################
 
 
--- ## handle_new_user function
--- 
--- The func creates a new user and inserts it into the users table
--- it also creates the associated user_balances table, factory and generator tables
--- it takes in the wallet address as the only input parameter
---
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO public.users (id, wallet_address) VALUES (NEW.id, NEW.raw_user_meta_data->>'wallet_address');
-    INSERT INTO factory (user_id) VALUES (NEW.id);
-    INSERT INTO generator (user_id) VALUES (NEW.id);
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- -- !IMPORTANT - old but better implementation, no time to debug, commenting it out
+-- -- ## handle_new_user function
+-- -- 
+-- -- The func creates a new user and inserts it into the users table
+-- -- it also creates the associated user_balances table, factory and generator tables
+-- -- it takes in the wallet address as the only input parameter
+-- --
+-- CREATE OR REPLACE FUNCTION handle_new_user()
+-- RETURNS TRIGGER AS $$
+-- DECLARE
+--     wallet_addr TEXT;
+-- BEGIN
+--     -- For Web3 auth, the wallet address is in the 'sub' field
+--     -- It's formatted as "solana:<wallet_address>"
+--     wallet_addr := COALESCE(
+--         -- Try extracting from sub (Web3 auth)
+--         regexp_replace(NEW.raw_user_meta_data->>'sub', '^solana:', ''),
+--         -- Fallback to direct wallet_address if present
+--         NEW.raw_user_meta_data->>'wallet_address',
+--         -- Last resort: use the email field (sometimes contains wallet for Web3)
+--         NEW.email
+--     );
 
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+--     INSERT INTO public.users (id, wallet_address, wallet_chain) 
+--     VALUES (NEW.id, wallet_addr, 'solana');
+    
+--     INSERT INTO factory (user_id) VALUES (NEW.id);
+--     INSERT INTO generator (user_id) VALUES (NEW.id);
+    
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- CREATE TRIGGER on_auth_user_created
+--     AFTER INSERT ON auth.users
+--     FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+-- -- !END-IMPORTANT
+
+
+-- -- !IMPORTANT - new implementation
+-- Allow users to insert their own record (one-time only)
+CREATE POLICY "Users can create own record" ON users 
+FOR INSERT 
+WITH CHECK (auth.uid() = id);
+
+-- Similar for related tables
+CREATE POLICY "Users can create own generator" ON generator 
+FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own factory" ON factory 
+FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+-- -- !END-IMPORTANT
 
 
 -- ####################
