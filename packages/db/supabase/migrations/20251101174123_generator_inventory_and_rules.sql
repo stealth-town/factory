@@ -221,13 +221,16 @@ EXECUTE FUNCTION check_equipped_limit();
 -- Policy: users can manage their generator's items
 CREATE POLICY "Users own generator items" ON generator_items 
 FOR ALL USING (
-    generator_id IN (SELECT id FROM generator WHERE user_id = auth.uid())
+    generator_id IN (
+        SELECT g.id FROM generator g WHERE g.user_id = auth.uid()
+    )
 );
 
 CREATE POLICY "Users own generator item stats" ON generator_item_stats
 FOR ALL USING (
     generator_item_id IN (
-        SELECT id FROM generator_items gi
+        SELECT gi.id
+        FROM generator_items gi
         JOIN generator g ON gi.generator_id = g.id
         WHERE g.user_id = auth.uid()
     )

@@ -76,7 +76,7 @@ CREATE TABLE user_balances_logs (
 CREATE TABLE generator (
 
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
     current_xp BIGINT NOT NULL DEFAULT 0, -- XP cap for the current level will be defined by some formula
     current_level INTEGER NOT NULL DEFAULT 1,
@@ -137,21 +137,25 @@ CREATE INDEX IF NOT EXISTS idx_factory_user_id ON factory (user_id);
 -- ####################
 
 
--- ## create_user function
+-- ## handle_new_user function
 -- 
 -- The func creates a new user and inserts it into the users table
 -- it also creates the associated user_balances table, factory and generator tables
 -- it takes in the wallet address as the only input parameter
 --
-CREATE OR REPLACE FUNCTION create_user(_auth_user_id UUID, _wallet TEXT)
-RETURNS UUID AS $$
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO users (id, wallet_address) VALUES (_auth_user_id, _wallet);
-    INSERT INTO factory (user_id) VALUES (_auth_user_id);
-    INSERT INTO generator (user_id) VALUES (_auth_user_id);
-    RETURN _auth_user_id;
+    INSERT INTO public.users (id, wallet_address) VALUES (NEW.id, NEW.raw_user_meta_data->>'wallet_address');
+    INSERT INTO factory (user_id) VALUES (NEW.id);
+    INSERT INTO generator (user_id) VALUES (NEW.id);
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 
 
