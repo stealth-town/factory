@@ -1,16 +1,14 @@
-import { PublicKey } from '@solana/web3.js'
 import bs58 from 'bs58'
 
 /**
- * Sign an authentication message with the wallet
- * Returns the signature in base58 format and the original message
+ * Sign authentication message for Solana Web3 auth
  */
 export async function signAuthMessage(
-  publicKey: PublicKey,
+  walletAddress: string,
   signMessage: (message: Uint8Array) => Promise<Uint8Array>
 ): Promise<{ signature: string; message: string }> {
   const timestamp = Date.now()
-  const message = `Sign in to Launch Solana\nWallet: ${publicKey.toBase58()}\nTimestamp: ${timestamp}`
+  const message = `I hereby authorize the use of my Solana wallet ${walletAddress} for authentication purposes.\nTimestamp: ${timestamp}`
   
   const encodedMessage = new TextEncoder().encode(message)
   const signatureBytes = await signMessage(encodedMessage)

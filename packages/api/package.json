@@ -16,15 +16,12 @@
   },
   "dependencies": {
     "@launch-solana/shared": "workspace:*",
-    "@solana/web3.js": "^1.95.4",
     "@supabase/supabase-js": "^2.78.0",
-    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
-    "tweetnacl": "^1.0.3",
     "zod": "^4.1.12"
   },
   "scripts": {

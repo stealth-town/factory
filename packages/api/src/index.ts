@@ -3,7 +3,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import config from './config';
-import authRoutes from './routes/auth.route';
 
 const app = express();
 
@@ -23,9 +22,6 @@ app.use(limiter);
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', environment: config.nodeEnv });
 });
-
-// API routes
-app.use('/api/auth', authRoutes);
 
 // Global error handler
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
