@@ -18,7 +18,7 @@ export async function requireAuth(
   next: NextFunction
 ) {
   const authHeader = req.headers.authorization
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'No token provided' })
   }
@@ -27,18 +27,19 @@ export async function requireAuth(
 
   try {
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token)
-    
+
     if (error || !user) {
       return res.status(401).json({ error: 'Invalid token' })
     }
 
     // Attach user info to request
-    ;(req as AuthRequest).user = {
+    ; (req as AuthRequest).user = {
       id: user.id,
-      walletAddress: user.user_metadata?.wallet_address || '',
+      walletAddress: user.user_metadata?.wallet_address || user.user_metadata?.sub || '',
     }
-    
+
     next()
+    
   } catch (error) {
     console.error('Token verification failed:', error)
     return res.status(401).json({ error: 'Token verification failed' })
