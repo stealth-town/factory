@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useWalletUi } from '@wallet-ui/react'
 import { supabase } from '@/lib/supabase'
+// import { useNavigate } from 'react-router'
 
 export interface AuthUser {
   id: string
@@ -10,7 +11,9 @@ export interface AuthUser {
 
 // #region - New implementation
 export function useAuth() {
+
   const { account, connected } = useWalletUi()
+  // const navigate = useNavigate()
 
   const login = useMutation({
     mutationFn: async (): Promise<AuthUser> => {
@@ -87,8 +90,31 @@ export function useAuth() {
     },
   })
 
+  // const logout = useMutation({
+  //   mutationFn: async (): Promise<void> => {
+      
+  //     // Sign out from Supabase
+  //     const { error } = await supabase.auth.signOut()
+      
+  //     if (error) {
+  //       throw new Error(error.message)
+  //     }
+
+  //     // Disconnect wallet
+  //     if (connected) {
+  //       await disconnect()
+  //     }
+  //   },
+  //   onSuccess: () => {
+  //     // Redirect to login after successful logout
+  //     navigate('/login', { replace: true })
+  //   },
+  // })
+
+
   return {
     login,
+    // logout,
   }
 }
 // #endregion
