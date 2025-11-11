@@ -1,0 +1,16 @@
+{
+  "name": "game-engine",
+  "packageManager": "yarn@4.10.3",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "@launch-solana/shared": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}

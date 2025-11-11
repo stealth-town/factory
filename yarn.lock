@@ -6876,6 +6876,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"game-engine@workspace:packages/engines/game-engine":
+  version: 0.0.0-use.local
+  resolution: "game-engine@workspace:packages/engines/game-engine"
+  dependencies:
+    "@types/node": "npm:^24.10.0"
+    dotenv: "npm:^17.2.3"
+    typescript: "npm:^5.9.3"
+  languageName: unknown
+  linkType: soft
+
 "generator-function@npm:^2.0.0":
   version: 2.0.1
   resolution: "generator-function@npm:2.0.1"

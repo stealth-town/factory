@@ -2,7 +2,8 @@
   "name": "launch-solana",
   "packageManager": "yarn@4.10.3",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/engines/*"
   ],
   "devDependencies": {
     "supabase": "2.54.11"
