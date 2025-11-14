@@ -1,0 +1,19 @@
+# Dependencies
+node_modules
+.yarn
+
+# Build output
+dist
+
+# Environment
+.env
+
+# Keypairs (NEVER commit private keys!)
+keypairs/*.json
+!keypairs/.gitkeep
+
+# Logs
+*.log
+
+# Anchor & local sol
+test-ledger

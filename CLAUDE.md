@@ -30,7 +30,11 @@ This is a **Yarn workspace monorepo** containing:
   - `supabase/migrations/`: Database migrations
   - Supabase JS client wrapper
   - Shared package for DB access across other packages
-- **Backend API**: Express + TypeScript (location TBD)
+- **packages/api**: Backend API with Express + TypeScript
+  - `src/routes/`: API route handlers
+  - `src/services/`: Business logic and service layer
+  - `src/config/`: Configuration with Zod validation
+  - Transaction verification system implementation
 - **Autonomous Runtimes**: Node.js + TypeScript services (location TBD)
   - Generator runtime executor
   - Trade resolver
@@ -96,6 +100,299 @@ Token acquisition system through simulated trading.
 
 **Progression:**
 - XP system for factory upgrades
+
+## Transaction Verification System
+
+A critical component of the game that handles all on-chain token transfers securely. The system ensures transactions are verified on-chain before updating game state, preventing exploits and maintaining economic integrity.
+
+### Overview
+
+All token movements in the game flow through this verification system. It uses a **construct → store → sign → verify → update** pattern that maintains security while providing smooth UX.
+
+**Key Principle:** Backend constructs transactions, users sign them, and backend only updates game state after on-chain verification.
+
+### Transaction Types
+
+The game uses **two different tokens** with distinct characteristics:
+
+**SOL (Native Solana Token):**
+- Transfers use **System Program** (simplest transfer mechanism)
+- Direct wallet-to-wallet transfers (no token accounts needed)
+- Lower complexity and fees
+- Used for: shop purchases, generator reward claims
+
+**$TOKEN (Custom SPL Token):**
+- Uses **Token-2022 standard** (supports transfer tax and minting)
+- Requires Associated Token Accounts (ATA)
+- More complex instruction structure
+- Used for: gacha burns, token rewards
+
+### Four Primary Transaction Flows
+
+1. **User → Vault (SOL)** - Shop purchases with native SOL
+   - User initiates purchase (buy item, buy balance, etc.)
+   - User transfers SOL to vault
+   - Backend verifies and credits item/balance
+
+2. **User → Dead Address ($TOKEN)** - Burning tokens for gacha rolls
+   - User burns tokens to dead address
+   - Backend verifies burn and grants pre-rolled item
+   - Uses pre-roll approach (see Gacha System below)
+
+3. **Vault → User (SOL)** - Claiming daily generator rewards
+   - User requests reward claim
+   - Backend pre-signs with vault authority
+   - User co-signs for fees
+   - Backend verifies and updates claim record
+
+4. **Vault → User ($TOKEN)** - Issuing token rewards
+   - Similar to SOL rewards but using $TOKEN
+   - Backend pre-signs, user co-signs
+   - Backend verifies and credits tokens
+
+### Core Verification Flow (10 Steps)
+
+This flow applies to ALL transaction types:
+
+1. **User initiates action** via API call
+   - Example: `POST /api/shop/purchase-item` with `{itemId: 123}`
+
+2. **Backend validates request**
+   - Check user has sufficient balance/tokens
+   - Verify requirements are met (item exists, user eligible, etc.)
+   - Return early with error if validation fails
+
+3. **Backend constructs unsigned transaction**
+   - Build Solana transaction with proper instructions
+   - For vault→user flows: Backend pre-signs with vault authority
+   - Calculate exact amounts, accounts, and instruction data
+
+4. **Backend creates pending transaction record**
+   - Insert into `pending_transactions` table
+   - Store transaction metadata, unsigned transaction bytes, context data
+   - Set 5-minute expiration
+
+5. **Backend returns unsigned transaction to user**
+   - Response: `{transactionId: "uuid", unsignedTransaction: "base64..."}`
+
+6. **Frontend: User signs and submits to Solana**
+   - Wallet prompts for signature
+   - Frontend submits signed transaction to Solana network
+   - Receives signature/txid back from Solana
+
+7. **Frontend notifies backend with signature**
+   - Call: `POST /api/transactions/{transactionId}/verify`
+   - Body: `{signature: "abc123..."}`
+   - **No polling needed** - user explicitly notifies backend
+
+8. **Backend verifies transaction on-chain**
+   - Fetch transaction from Solana via RPC using signature
+   - Verify transaction status is "finalized"
+   - Validate transaction structure matches expected:
+     - **For SOL**: System Program instruction, correct lamports amount
+     - **For $TOKEN**: Token Program instruction, correct token accounts and amounts
+     - Correct accounts (user, vault, program IDs)
+     - Correct instruction data
+     - Matches the original unsigned transaction
+
+9. **Backend updates database atomically**
+   - Mark `pending_transactions.status = 'confirmed'`
+   - Execute business logic (add item, update balance, etc.)
+   - Store `expected_signature` for idempotency
+   - All updates in single DB transaction (atomic)
+
+10. **Backend returns success to frontend**
+    - User sees confirmation UI
+
+### Gacha System Flow (Pre-roll Approach)
+
+Special handling for "burn token → reveal random item" mechanic:
+
+1. **User requests gacha roll** - `POST /api/gacha/purchase`
+
+2. **Backend pre-rolls item result**
+   - Generate cryptographically secure random item
+   - Store in `pending_transactions.transaction_data`:
+     ```json
+     {"item_id": 42, "item_rarity": "rare", "cost_amount": 1000}
+     ```
+   - Construct burn transaction (send $TOKEN to dead address)
+   - Return `{transactionId, unsignedTransaction}`
+
+3. **Frontend shows "spinning" animation**
+   - User sees loading/anticipation UI
+   - Item result is hidden until verification
+
+4. **User signs and submits transaction**
+
+5. **Frontend calls verify endpoint**
+
+6. **Backend verifies burn transaction**
+   - Confirms tokens burned to dead address
+   - Correct amount burned
+   - Transaction finalized
+
+7. **Backend adds pre-rolled item to inventory**
+   - Insert into `generator_items` from stored `transaction_data`
+   - Mark transaction confirmed
+
+8. **Frontend reveals item with drop animation**
+   - "You got a Rare Sword!"
+
+**Why Pre-roll?**
+- **Deterministic**: Item locked in when transaction created
+- **Idempotent**: Retry verification reveals same item
+- **Atomic**: Roll and burn are inseparable
+- **Fair**: Can't manipulate randomness after seeing transaction
+- **UX**: Smooth reveal animation after confirmation
+
+### Technical Implementation
+
+**Transaction Construction:**
+
+SOL transfers (System Program):
+```typescript
+// User → Vault (Shop Purchase)
+SystemProgram.transfer({
+  fromPubkey: userWallet,
+  toPubkey: vaultWallet,
+  lamports: amount, // 1 SOL = 1e9 lamports
+})
+
+// Vault → User (Reward Claim) - Backend pre-signs
+transaction.partialSign(vaultKeypair);
+```
+
+$TOKEN transfers (Token Program):
+```typescript
+// User → Dead Address (Gacha Burn)
+createTransferInstruction(
+  userTokenAccount,    // from ATA
+  deadTokenAccount,    // to dead address ATA
+  userWallet,          // owner
+  burnAmount,          // token amount (with decimals)
+  [],
+  TOKEN_PROGRAM_ID
+)
+
+// Vault → User (Token Reward) - Backend pre-signs
+transaction.partialSign(vaultAuthorityKeypair);
+```
+
+**Key Differences:**
+
+| Aspect | SOL Transfers | $TOKEN Transfers |
+|--------|---------------|------------------|
+| Program | System Program | Token-2022 Program |
+| Accounts | 2 (from, to) | 3+ (from ATA, to ATA, authority) |
+| Complexity | Simple | Moderate |
+| Fees | ~0.000005 SOL | ~0.00001 SOL + ATA rent |
+| Verification | Straightforward | Token account validation required |
+
+### Database Schema
+
+**pending_transactions table** (`packages/db/supabase/migrations/20251112000000_transaction_verification_system.sql`):
+
+```sql
+CREATE TABLE pending_transactions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+
+  transaction_type TEXT, -- 'purchase_item', 'gacha_roll', 'claim_rewards', etc.
+  status TEXT DEFAULT 'pending', -- 'pending', 'confirmed', 'failed', 'expired'
+
+  expected_signature TEXT, -- filled after verification (idempotency)
+  unsigned_transaction TEXT, -- base64 encoded bytes
+  transaction_data JSONB, -- context (item_id, amounts, pre-rolled results)
+
+  sol_amount BIGINT, -- lamports (NULL if not SOL transaction)
+  token_amount BIGINT, -- tokens with decimals (NULL if not token transaction)
+
+  expires_at TIMESTAMPTZ, -- NOW() + 5 minutes
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+**Supporting Functions:**
+- `expire_old_transactions()` - Mark expired pending transactions (run every 5 min)
+- `cleanup_old_transactions(days)` - Delete old confirmed/failed/expired records (prevent bloat)
+
+**RLS Policies:**
+- Users can view/create/update their own transactions
+- Backend service role bypasses RLS automatically
+
+### API Endpoint Pattern
+
+**Create Transaction:**
+```
+POST /api/{action}
+Body: action-specific parameters
+Response: {transactionId, unsignedTransaction}
+```
+
+**Verify Transaction:**
+```
+POST /api/transactions/{transactionId}/verify
+Body: {signature: "string"}
+Response: {success: true, data: {...}}
+```
+
+**Examples:**
+- `POST /api/shop/purchase-item` - Buy item with SOL
+- `POST /api/gacha/purchase` - Buy gacha roll with $TOKEN
+- `POST /api/generator/claim-rewards` - Claim daily SOL rewards
+- `POST /api/transactions/{id}/verify` - Universal verification endpoint
+
+### Design Principles
+
+**Security:**
+- Always verify on-chain transaction structure
+- Never trust user-provided amounts or data
+- Validate transaction is finalized before updating state
+- Check instruction data matches expected values
+
+**Atomicity:**
+- Use database transactions for state updates
+- All-or-nothing: verify + update in single transaction
+- Rollback if any step fails
+
+**Idempotency:**
+- Store `expected_signature` after first verification
+- Return cached result if same signature submitted twice
+- Prevents double-processing
+
+**User Experience:**
+- Immediate verification (no polling delays)
+- Clear error messages for failures
+- Smooth animations for gacha reveals
+- Retry mechanisms for network issues
+
+**Transaction Expiration:**
+- Pending transactions expire after 5 minutes
+- Prevents replay attacks
+- Cleanup job removes expired records
+- User can create new transaction if expired
+
+### Implementation Status
+
+**Completed:**
+- ✅ Database schema (`pending_transactions` table)
+- ✅ Cleanup functions (expire and delete old transactions)
+- ✅ RLS policies for user access control
+
+**In Progress:**
+- 🚧 Transaction construction utilities
+- 🚧 Verification service (fetch + validate from Solana)
+- 🚧 API endpoints for each transaction type
+
+**Pending:**
+- ⏳ Frontend transaction signing flow
+- ⏳ Gacha reveal UI with animations
+- ⏳ Error handling and retry logic
+- ⏳ Edge case testing
+
+For detailed documentation, see: `docs/TRANSACTIONS_FEATURE.md`
 
 ## Common Commands
 
@@ -264,8 +561,12 @@ The example program (`packages/dapp/anchor/programs/dapp/src/lib.rs`) implements
 
 ## Database Schema Considerations
 
-Key entities that will need database tables:
+Key entities with database tables:
 
+**Implemented:**
+- **pending_transactions**: Transaction verification system records (see Transaction Verification System section)
+
+**Planned:**
 - **Users**: Wallet address, XP, stats
 - **Generators**: Per-user generator state, attributes, equipped items
 - **Items**: Item definitions (types, rarities, attributes)
@@ -273,7 +574,7 @@ Key entities that will need database tables:
 - **Generator Runtimes**: Daily runtime records, flux generated, events
 - **Trades**: Active and completed factory trades
 - **Balances**: User in-game currency balances
-- **Token Transactions**: History of $token burns, rewards
+- **Token Transactions**: History of $token burns, rewards (may be consolidated with pending_transactions)
 - **USDC Distributions**: Daily USDC distribution records
 
 ## Development Workflow Notes

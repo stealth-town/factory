@@ -2,6 +2,7 @@
   "name": "api",
   "packageManager": "yarn@4.10.3",
   "devDependencies": {
+    "@types/bs58": "^5.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
@@ -16,12 +17,17 @@
   },
   "dependencies": {
     "@launch-solana/shared": "workspace:*",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.78.0",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-async-errors": "^3.1.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
+    "winston": "^3.18.3",
     "zod": "^4.1.12"
   },
   "scripts": {

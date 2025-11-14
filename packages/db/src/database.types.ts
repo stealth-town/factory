@@ -349,6 +349,101 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_transactions: {
+        Row: {
+          created_at: string
+          expected_signature: string | null
+          expires_at: string
+          id: string
+          sol_amount: number | null
+          status: string
+          token_amount: number | null
+          transaction_data: Json
+          transaction_type: string
+          unsigned_transaction: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expected_signature?: string | null
+          expires_at: string
+          id?: string
+          sol_amount?: number | null
+          status?: string
+          token_amount?: number | null
+          transaction_data: Json
+          transaction_type: string
+          unsigned_transaction: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expected_signature?: string | null
+          expires_at?: string
+          id?: string
+          sol_amount?: number | null
+          status?: string
+          token_amount?: number | null
+          transaction_data?: Json
+          transaction_type?: string
+          unsigned_transaction?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shop_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: number
+          is_enabled: boolean
+          is_featured: boolean
+          item_type: string
+          metadata: Json
+          name: string
+          sol_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          is_enabled?: boolean
+          is_featured?: boolean
+          item_type: string
+          metadata?: Json
+          name: string
+          sol_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: number
+          is_enabled?: boolean
+          is_featured?: boolean
+          item_type?: string
+          metadata?: Json
+          name?: string
+          sol_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_balances_logs: {
         Row: {
           created_at: string
@@ -422,7 +517,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_transactions: { Args: { days_old?: number }; Returns: number }
+      expire_old_transactions: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

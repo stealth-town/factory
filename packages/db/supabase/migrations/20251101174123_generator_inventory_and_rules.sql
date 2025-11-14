@@ -78,6 +78,8 @@ CREATE INDEX idx_generator_item_stats_item_id ON generator_item_stats(generator_
 
 
 
+
+
 -- ####################
 -- # AUTO-CALCULATE STATS FUNCTION
 -- ####################
@@ -116,6 +118,8 @@ CREATE TRIGGER trigger_calculate_item_stats
 AFTER INSERT ON generator_items
 FOR EACH ROW
 EXECUTE FUNCTION calculate_item_instance_stats();
+
+
 
 
 
@@ -212,6 +216,9 @@ CREATE TRIGGER trigger_check_equipped_limit
 BEFORE INSERT OR UPDATE ON generator_items
 FOR EACH ROW
 EXECUTE FUNCTION check_equipped_limit();
+
+
+
 
 
 -- ####################

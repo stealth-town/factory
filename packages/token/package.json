@@ -1,0 +1,23 @@
+{
+  "name": "@launch-solana/token",
+  "version": "1.0.0",
+  "description": "SPL token utilities for local development",
+  "packageManager": "yarn@4.10.3",
+  "type": "module",
+  "scripts": {
+    "create-token": "tsx src/scripts/create-token.ts",
+    "mint-tokens": "tsx src/scripts/mint-tokens.ts",
+    "get-balance": "tsx src/scripts/get-balance.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.95.8",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

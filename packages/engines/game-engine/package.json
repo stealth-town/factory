@@ -6,8 +6,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
-    "@launch-solana/shared": "workspace:*"
+    "@launch-solana/shared": "workspace:*",
+    "dotenv": "^17.2.3"
   },
   "scripts": {
     "build": "tsc",
